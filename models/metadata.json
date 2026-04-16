@@ -1,0 +1,39 @@
+{
+  "model_type": "RandomForestClassifier",
+  "n_estimators": 200,
+  "max_depth": 12,
+  "accuracy": 0.94,
+  "roc_auc": 0.962642,
+  "feature_columns": [
+    "Type",
+    "Air temperature [K]",
+    "Process temperature [K]",
+    "Rotational speed [rpm]",
+    "Torque [Nm]",
+    "Tool wear [min]",
+    "Temp_Diff [K]",
+    "Power [W]"
+  ],
+  "feature_importances": {
+    "Rotational speed [rpm]": 0.1983942719238687,
+    "Torque [Nm]": 0.1953013093290584,
+    "Tool wear [min]": 0.17956013082159344,
+    "Power [W]": 0.16767843846126876,
+    "Temp_Diff [K]": 0.11105704873875238,
+    "Air temperature [K]": 0.07001978196762822,
+    "Process temperature [K]": 0.04797634742993699,
+    "Type": 0.030012671327893124
+  },
+  "training_samples": 15458,
+  "test_samples": 2000,
+  "confusion_matrix": [
+    [
+      1829,
+      103
+    ],
+    [
+      17,
+      51
+    ]
+  ]
+}

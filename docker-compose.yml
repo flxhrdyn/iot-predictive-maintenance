@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+
+  # ── Prediction API ─────────────────────────────────────────────────── #
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: machine-failure-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the local models/ folder so trained artefacts are visible
+      - ./models:/app/models:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # ── IoT Sensor Simulator (optional, starts after API is healthy) ───── #
+  iot-simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: machine-failure-iot-sim
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      - API_URL=http://api:8000
+    # Override CMD to run the simulator instead of the API
+    command: >
+      python iot_simulator/sensor_simulator.py
+      --api-url http://api:8000
+      --multi
+      --interval 3
+    volumes:
+      - ./iot_simulator:/app/iot_simulator:ro
+    restart: "no"   # run once; remove this line for continuous simulation
+    profiles:
+      - simulation   # start only when: docker compose --profile simulation up
