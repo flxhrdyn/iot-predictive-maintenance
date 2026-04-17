@@ -16,8 +16,8 @@ requests>=2.28.0
 pymodbus>=3.1.0
 paho-mqtt>=1.6.1
 
-# Optional: Notebook
-# jupyter
-# matplotlib
-# seaborn
-# missingno
+#Optional: Notebook
+jupyter
+matplotlib
+seaborn
+missingno
