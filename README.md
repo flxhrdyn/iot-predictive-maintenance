@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="iot_predictive_maintenance_banner_1776398052915.png" width="100%" alt="Banner">
   
   # 🏭 IIoT Predictive Maintenance System
   **Bridging Industrial Automation (Modbus) and IoT Ecosystems (MQTT) with State-of-the-Art ML Engineering.**
@@ -50,10 +49,10 @@ Our model is trained on a dataset of **10,000 samples**, handling extreme class 
 ### 📈 Core Metrics (on 2,000 hold-out samples)
 | Metric | Score | Industrial Impact |
 | :--- | :--- | :--- |
-| **Accuracy** | **97.35%** | Exceptionally stable baseline |
-| **Precision (Failure)** | **61.0%** | Minimized false-positive maintenance costs |
-| **Recall (Failure)** | **63.0%** | Captures 2 out of 3 major breakdowns ahead of time |
-| **F1-Score** | **0.620** | Balanced performance for imbalanced telemetry |
+| **Accuracy** | **0.97** | Exceptionally stable baseline |
+| **Precision (Failure)** | **0.61** | Minimized false-positive maintenance costs |
+| **Recall (Failure)** | **0.62** | Captures 2 out of 3 major breakdowns ahead of time |
+| **F1-Score** | **0.61** | Balanced performance for imbalanced telemetry |
 
 ---
 
