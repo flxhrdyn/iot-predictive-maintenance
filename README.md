@@ -1,5 +1,4 @@
 <div align="center">
-  
   # 🏭 IIoT Predictive Maintenance System
   **Bridging Industrial Automation (Modbus) and IoT Ecosystems (MQTT) with State-of-the-Art ML Engineering.**
   
