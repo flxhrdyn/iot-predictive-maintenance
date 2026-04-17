@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
 
-  # ── Prediction API ─────────────────────────────────────────────────── #
+  # Prediction API #
   api:
     build:
       context: .
@@ -16,15 +16,14 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:
-      test: ["CMD", "python", "-c",
-             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" ]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
     restart: unless-stopped
 
-  # ── IoT Sensor Simulator (optional, starts after API is healthy) ───── #
+  # IoT Sensor Simulator (optional, starts after API is healthy) #
   iot-simulator:
     build:
       context: .
@@ -37,12 +36,47 @@ services:
       - API_URL=http://api:8000
     # Override CMD to run the simulator instead of the API
     command: >
-      python iot_simulator/sensor_simulator.py
-      --api-url http://api:8000
-      --multi
-      --interval 3
+      python iot_simulator/sensor_simulator.py --api-url http://api:8000 --multi --interval 3
     volumes:
       - ./iot_simulator:/app/iot_simulator:ro
-    restart: "no"   # run once; remove this line for continuous simulation
+    restart: "no" # run once; remove this line for continuous simulation
     profiles:
-      - simulation   # start only when: docker compose --profile simulation up
+      - simulation
+
+  # MQTT Broker #
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: iot-mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      # Simple config allowing anonymous access for demo purposes
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    profiles:
+      - simulation
+
+  # PLC Emulator (Modbus TCP Server) #
+  plc-emulator:
+    build: .
+    container_name: industrial-plc
+    command: python industrial_iot/plc_emulator.py
+    environment:
+      - PYTHONUNBUFFERED=1
+    profiles:
+      - simulation
+
+  # IoT Gateway (Modbus Client -> MQTT Publisher) #
+  iot-gateway:
+    build: .
+    container_name: industrial-gateway
+    depends_on:
+      - plc-emulator
+      - mosquitto
+    command: python industrial_iot/gateway.py
+    environment:
+      - MODBUS_HOST=plc-emulator
+      - MQTT_HOST=mosquitto
+      - PYTHONUNBUFFERED=1
+    profiles:
+      - simulation

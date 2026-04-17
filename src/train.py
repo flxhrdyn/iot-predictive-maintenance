@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import joblib
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 from sklearn.metrics import (
     accuracy_score,
     roc_auc_score,
@@ -62,30 +62,31 @@ def train():
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
-    print(f"      Train : {X_train.shape0} samples")
-    print(f"      Test  : {X_test.shape0} samples")
+    print(f"      Train : {X_train.shape[0]} samples")
+    print(f"      Test  : {X_test.shape[0]} samples")
 
-    #  4. SMOTE  #
-    print("\n4/7 Applying SMOTE to balance training classes ...")
-    before = dict(zip(*np.unique(y_train, return_counts=True)))
-    smote = SMOTE(random_state=42)
-    X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
-    after = dict(zip(*np.unique(y_train_res, return_counts=True)))
-    print(f"      Before SMOTE : {before}")
-    print(f"      After  SMOTE : {after}")
+    #  4. Handle Imbalance  #
+    # We use XGBoost's native scale_pos_weight instead of SMOTE for better stability
+    print("\n4/7 Calculating class weights for imbalance handling ...")
+    counts = np.bincount(y_train)
+    pos_weight = counts[0] / counts[1]
+    print(f"      Negative samples : {counts[0]}")
+    print(f"      Positive samples : {counts[1]}")
+    print(f"      Suggested scale_pos_weight : {pos_weight:.2f}")
 
     #  5. Train Model  #
-    print("\n5/7 Training Random Forest Classifier ...")
-    model = RandomForestClassifier(
-        n_estimators=200,
-        max_depth=12,
-        min_samples_split=5,
-        min_samples_leaf=2,
-        class_weight="balanced",
+    print(f"\n5/7 Training XGBoost Classifier (pos_weight={pos_weight:.1f}) ...")
+    model = XGBClassifier(
+        n_estimators=300,
+        max_depth=6,
+        learning_rate=0.1,
+        verbosity=1,
+        objective="binary:logistic",
+        scale_pos_weight=pos_weight,
         random_state=42,
         n_jobs=-1,
     )
-    model.fit(X_train_res, y_train_res)
+    model.fit(X_train, y_train)
     print("      Training complete OK")
 
     #    6. Evaluate  #
@@ -100,8 +101,8 @@ def train():
     print(f"\n      Accuracy  : {accuracy:.4f}  ({accuracy * 100:.2f} %)")
     print(f"      ROC AUC   : {roc_auc:.4f}")
     print(f"\n      Confusion Matrix:")
-    print(f"        TN={cm0,0}  FP={cm0,1}")
-    print(f"        FN={cm1,0}  TP={cm1,1}")
+    print(f"        TN={cm[0, 0]}  FP={cm[0, 1]}")
+    print(f"        FN={cm[1, 0]}  TP={cm[1, 1]}")
     print(f"\n      Classification Report:")
     print(
         classification_report(
@@ -132,14 +133,16 @@ def train():
     preprocessor.save(PREPROCESSOR_PATH)
 
     metadata = {
-        "model_type": "RandomForestClassifier",
-        "n_estimators": 200,
-        "max_depth": 12,
+        "model_type": "XGBClassifier",
+        "n_estimators": 300,
+        "max_depth": 6,
+        "learning_rate": 0.1,
+        "scale_pos_weight": round(float(pos_weight), 2),
         "accuracy": round(float(accuracy), 6),
         "roc_auc": round(float(roc_auc), 6),
         "feature_columns": preprocessor.feature_columns,
         "feature_importances": sorted_imp,
-        "training_samples": int(X_train_res.shape[0]),
+        "training_samples": int(X_train.shape[0]),
         "test_samples": int(X_test.shape[0]),
         "confusion_matrix": cm.tolist(),
     }

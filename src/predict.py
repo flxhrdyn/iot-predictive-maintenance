@@ -1,11 +1,11 @@
-\"\"\"
+"""
 predict.py - CLI Prediction Script
 Quick single sample inference from the command line.
 
 Usage examples:
   python src/predict.py
   python src/predict.py --type M --air-temp 300 --proc-temp 310 --rpm 1500 --torque 40 --wear 100
-\"\"\"
+"""
 
 import argparse
 import json

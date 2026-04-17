@@ -14,6 +14,7 @@ os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
 import json
 import sys
+import threading
 import time
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -23,12 +24,15 @@ import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+import paho.mqtt.client as mqtt
+from paho.mqtt.enums import CallbackAPIVersion
 
-#  Resolve import path so we can find preprocess.py in project root  #
+#  Resolve import path so we can find preprocess.py and other modules  #
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+sys.path.insert(0, os.path.join(ROOT, "src"))
 
-from src.preprocess import MachineFailurePreprocessor  # noqa: E402
+from preprocess import MachineFailurePreprocessor  # noqa: E402
 
 #  Paths  #
 MODELS_DIR = os.path.join(ROOT, "models")
@@ -89,12 +93,55 @@ async def _load_model():
             _state["metadata"] = json.load(f)
         _state["loaded_at"] = datetime.now(timezone.utc).isoformat()
         print("OK Model loaded and ready.")
+        
+        # Start MQTT Subscriber
+        _start_mqtt_client()
     except FileNotFoundError:
         print(
             "[WARN] Model files not found -- run `python train.py` first.\n"
             "       API will start but /predict will return 503."
         )
 
+
+#  MQTT Integrated Ingestion  #
+
+MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
+MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
+MQTT_TOPIC = "factory/machine/telemetry"
+
+def _on_mqtt_message(client, userdata, msg):
+    try:
+        payload = json.loads(msg.payload.decode())
+        # Convert dict to SensorReading model
+        reading = SensorReading(**payload)
+        
+        # Run inference
+        result = _run_inference(reading)
+        
+        # Log to console (in a real app, this would go to a DB or Alert system)
+        print(f" [MQTT] {result.device_id}: {result.risk_level} risk ({result.failure_probability*100:.1f}%)")
+        
+        # Optionally publish alerts back to MQTT
+        if result.risk_level == "HIGH":
+            client.publish("factory/alerts", json.dumps(result.model_dump()))
+            
+    except Exception as e:
+        print(f" [MQTT ERR] Failed to process message: {e}")
+
+def _start_mqtt_client():
+    # paho-mqtt 2.0+ requires an explicit CallbackAPIVersion
+    client = mqtt.Client(CallbackAPIVersion.VERSION2, "Predictive-Maintenance-API")
+    client.on_message = _on_mqtt_message
+    
+    try:
+        client.connect(MQTT_HOST, MQTT_PORT, 60)
+        client.subscribe(MQTT_TOPIC)
+        # Run the MQTT loop in a background thread to not block FastAPI
+        mqtt_thread = threading.Thread(target=client.loop_forever, daemon=True)
+        mqtt_thread.start()
+        print(f"OK MQTT Subscriber started on topic: {MQTT_TOPIC}")
+    except Exception as e:
+        print(f" [WARN] MQTT could not connect: {e}")
 
 #  Schemas  #
 

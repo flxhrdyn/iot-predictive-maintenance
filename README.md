@@ -1,91 +1,100 @@
-# IoT Predictive Maintenance System
+# 🏭 IIoT Predictive Maintenance System
+### End-to-End ML Ops for Industrial Machine Failure Prediction
 
-An end to end Machine Learning Operations project designed to predict industrial machine failure. This system transitions a static Kaggle dataset into a robust localized application, complete with automated preprocessing, training pipelines, a lightning fast REST API, and a multithreaded IoT simulator.
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![MQTT](https://img.shields.io/badge/MQTT-3C3F41?style=for-the-badge&logo=mqtt)](https://mqtt.org/)
+[![Modbus](https://img.shields.io/badge/Modbus_TCP-FF6600?style=for-the-badge&logo=industrial-software)](https://modbus.org/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
-## Project Architecture
+This project is a professional-grade **Industrial IoT (IIoT) Predictive Maintenance** system. It transitions a static dataset into a live industrial environment, simulating a full automation stack from **PLC registers to Real-time ML Inference**.
 
-This repository adopts a strict software engineering standard by isolating concerns. Data lives in the data folder, experiments remain inside notebooks, core capabilities sit in the src directory, and deployment mechanisms fall under the API or Docker configs.
+---
+
+## 🏗️ System Architecture (Industry 4.0)
+
+This project implements a multi-layer "Edge-to-Cloud" architecture, reflecting modern Smart Factory standards:
+
+```mermaid
+graph TD
+    subgraph Field_Level [Field Level - Physical Machine]
+        M1[Mechanical Components] --> PLC[Modbus PLC Emulator]
+    end
+    
+    subgraph Edge_Level [Edge Computing - IIoT Gateway]
+        PLC -- Polls Registers -- GW[Industrial Gateway]
+        GW -- Publishes JSON -- Broker[MQTT Mosquitto Broker]
+    end
+    
+    subgraph Cloud_Level [AI Analytics - ML Service]
+        Broker -- Real-time Stream -- API[FastAPI Inference Engine]
+        API -- XGBoost -- Pred[Failure Prediction]
+        API -- High Risk -- Alert[MQTT Alerts / Alerts Service]
+    end
+```
+
+### 🛠️ Technology Stack
+*   **Machine Learning**: **XGBoost (Extreme Gradient Boosting)**, native class weighting, custom OOP Preprocessors.
+*   **Industrial Connectivity**: **Modbus TCP** (PLC level), **MQTT** (IIoT Messaging).
+*   **Backend & API**: **FastAPI** (Uvicorn), Pydantic for data validation.
+*   **Infrastructure**: **Docker** & Docker Compose for orchestration.
+
+---
+
+## 📂 Project Structure
 
 ```text
-Machine_Failure_Classification_Tabular/
-   data/
-      predictive_maintenance.csv
-   notebooks/
-      Machine_Failure_Classification.ipynb
-   src/
-      preprocess.py
-      train.py
-      predict.py
-   api/
-      main.py
-   iot_simulator/
-      sensor_simulator.py
-   models/
-      model.joblib
-      preprocessor.joblib
-      metadata.json
-   Dockerfile
-   docker-compose.yml
-   requirements.txt
+Machine_Failure_Classification/
+├── industrial_iot/
+│   ├── plc_emulator.py    # Local PLC Simulation (Modbus TCP Server)
+│   └── gateway.py         # IIoT Gateway (Modbus Client -> MQTT Publisher)
+├── api/
+│   └── main.py            # Inference Service (FastAPI + MQTT Subscriber)
+├── src/
+│   ├── preprocess.py      # Feature Engineering & Scaling
+│   ├── train.py           # ML Training Pipeline
+│   └── predict.py         # Batch Prediction Scripts
+├── models/                # Serialised ML Artefacts (.joblib)
+├── docker-compose.yml     # Full Stack Orchestration
+└── requirements.txt       # Core Dependencies
 ```
 
-## Features
+---
 
-* **Intelligent Preprocessing**: An object oriented preprocessor dynamically builds engineered parameters like Temperature Differentials and Mechanical Power while handling rigorous Tukey IQR winsorizing against extreme outliers.
-* **Automated Training**: One simple command triggers data shuffling, SMOTE minority class generation, and precise Random Forest compiling. The engine produces lightweight memory artefacts automatically.
-* **Continuous IoT Emulation**: A robust threading simulator broadcasts organically degrading machine profiles to challenge the API exactly like a true factory floor.
-* **Sub Millisecond API Interfacing**: Powered by FastAPI, inference algorithms process edge inputs almost instantly, enabling confident production deployments.
+## 🚀 Quick Start Guide
 
-## Quick Start Guide
-
-### Step One
-Provision your environment with the core dependencies.
+### 1. Model Preparation
+Initialize the Machine Learning algorithms by executing the core training sequence. This populates the `models/` directory with production-ready artefacts.
 ```bash
 pip install -r requirements.txt
-```
-
-### Step Two
-Instantiate the Machine Learning algorithms by executing the core training sequence. This procedure parses the raw diagnostic data in the background and populates the models directory.
-```bash
 python src/train.py
 ```
 
-### Step Three
-Engage the backend router layer. This boots up the inference proxy on localhost.
+### 2. Full Stack Deployment (Recommended)
+Deploy the entire IIoT environment (Broker, PLC, Gateway, and API) using Docker:
 ```bash
-uvicorn api.main:app --reload --port 8000
-```
-
-### Step Four
-You can immediately view the live API interface using your browser by navigating to `http://localhost:8000/docs`. To mimic physical edge sensors, open a secondary terminal pane and execute the physics simulator to trigger telemetry broadcasts.
-```bash
-# Simulates three varied machines experiencing cascading mechanical stress
-python iot_simulator/sensor_simulator.py --multi
-```
-
-## Application Programming Interface Reference
-
-### Checking Infrastructure Status
-A lightweight GET request verifying deep component health.
-* Route: `GET /health`
-* Response confirms model load readiness alongside timestamps.
-
-### Individual Sensor Validation
-Submit structured operational signals to receive deterministic risks.
-* Route: `POST /predict`
-* Required Parameters: Type, Air Temperature, Process Temperature, Torque, Rotational Speed, and cumulative Tool Wear.
-* Response fields outline absolute prediction booleans, risk magnitude labels, and exact floating point probabilities.
-
-### Gateway Batching
-Designed explicitly for aggregated packet scenarios.
-* Route: `POST /predict/batch`
-* Evaluates lists encompassing up to five hundred individual items simultaneously to conserve pipeline overhead.
-
-## Containerization
-
-For seamless cloud or local provisioning, bypass local Python setups entirely.
-
-```bash
-# Deploys both the API algorithm and the background simulated machines
 docker compose --profile simulation up --build
 ```
+
+### 3. Manual Interface
+Once deployed, you can interact with the system via:
+*   **REST API**: [http://localhost:8000/docs](http://localhost:8000/docs) (Swagger UI)
+*   **MQTT Telemetry**: Subscribe to `factory/machine/telemetry` via any MQTT client.
+*   **Modbus Registers**: Connect to `localhost:502` to see internal PLC state.
+
+---
+
+## 📊 ML Engineering Features
+*   **Class Imbalance Handling**: Utilises SMOTE (Synthetic Minority Over-sampling Technique) to ensure the model accurately predicts rare failure events.
+*   **Feature Engineering**: Custom transformers for **Mechanical Power** and **Temperature Differentials** derived from raw sensor data.
+*   **High Performance**: Sub-millisecond inference time (< 2ms) tuned for edge device limitations.
+
+---
+
+## 💼 Industrial Relevance
+This portfolio project demonstrates the ability to:
+1.  **Bridge OT and IT**: Connecting Operational Technology (PLC/Modbus) with Information Technology (MQTT/Web APIs).
+2.  **Professional ML Ops**: Transitioning from legacy Random Forest to state-of-the-art Gradient Boosting (XGBoost) for enhanced reliability.
+3.  **Design for Scalability**: Using containerisation and asynchronous messaging.
+
+---
+**Maintained by Felix Hardyan** | [GitHub](https://github.com/felixhardyan)

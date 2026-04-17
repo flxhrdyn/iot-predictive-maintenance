@@ -1,7 +1,7 @@
-\"\"\"
+"""
 preprocess.py Machine Failure Classification module
 This is a reusable preprocessing pipeline that includes Feature Engineering, Winsorizing, Encoding, and Scaling components.
-\"\"\"
+"""
 
 import numpy as np
 import pandas as pd
@@ -10,7 +10,6 @@ from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 
 
 class MachineFailurePreprocessor:
-    \"\"\"
     """
     End to end preprocessing pipeline for Machine Failure Classification
 
