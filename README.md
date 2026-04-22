@@ -1,6 +1,6 @@
 <div align="center">
 
-  # IoT Predictive Maintenance — Industrial Failure Prediction
+  # Industrial Machine Failure Prediction System
   **Bridging Industrial Automation (Modbus) and IoT Ecosystems (MQTT) with State-of-the-Art ML Engineering.**
   
   [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
@@ -15,7 +15,7 @@
 
 ## Overview
 
-In Industry 4.0, unplanned downtime is a multi-million dollar problem. **IoT Predictive Maintenance** is a production-grade solution that demonstrates how to bridge the gap between physical field devices and real-time AI inference.
+In Industry 4.0, unplanned downtime is a multi-million dollar problem. **Industrial Machine Failure Prediction** is a production-grade solution that demonstrates how to bridge the gap between physical field devices and real-time AI inference.
 
 This project serves as a **Managed IIoT Microservice Architecture** that automates the machine health monitoring lifecycle: from polling Modbus registers in a simulated factory environment to executing predictive diagnostics via a high-performance MQTT telemetry stream.
 
@@ -25,26 +25,23 @@ This project serves as a **Managed IIoT Microservice Architecture** that automat
 - **Predictive Inference Engine**: High-performance XGBoost classifier trained to detect manufacturing failures (Tool Wear, Heat Dissipation, Power, etc.) with high precision.
 - **Edge-to-Cloud Pipeline**: Realistic simulation of industrial gateways polling registers and publishing structured JSON telemetry to centralized subscribers.
 - **Imbalanced Data Handling**: Specialized ML preprocessing and model weighting to handle rare failure events in a 10,000-sample industrial dataset.
-- **Microservices Deployment**: Fully containerized architecture orchestrated via Docker Compose, including health checks and service dependency management.
-- **Real-time REST API**: FastAPI-powered endpoint for on-demand failure prediction with automated Swagger/OpenAPI documentation.
+- **Real-time Monitoring**: Professional dashboard for visualizing machine telemetry and AI-driven risk assessment.
 
 ## Technology Stack
 
 ### Backend & ML
 - **Framework**: FastAPI, Uvicorn
 - **ML Engine**: XGBoost, Scikit-learn
-- **Data Engineering**: Pandas, NumPy, Imbalanced-learn
+- **Data Engineering**: Pandas, NumPy
 - **Protocols**: PyModbus (Modbus TCP), Paho-MQTT
 
 ### Simulation & IoT
 - **Field Level**: PLC Emulator (Modbus TCP Server)
 - **Gateway Level**: Industrial Gateway (Modbus-to-MQTT Bridge)
-- **IoT Simulator**: Multi-sensor stress test scripts
 
 ### Infrastructure
 - **Message Broker**: Eclipse Mosquitto (MQTT)
-- **Containerization**: Docker, Docker Compose
-- **Orchestration**: Docker Compose Multi-Stage Builds
+- **Dashboard**: HTML5, Tailwind CSS, Chart.js
 
 ## System Architecture
 
@@ -63,63 +60,47 @@ graph TD
     subgraph AI_Cloud_Level [🧠 Intelligence Level]
         Broker -->|Real-time Stream| API[FastAPI + MQTT Subscriber]
         API -->|XGBoost| Model[Inference Engine]
-        Model -->|Predictions| UI[REST Docs / Metrics Interface]
+        Model -->|Predictions| UI[Interactive Dashboard]
         Model -->|High Risk Alert| AlertTopic[MQTT /factory/alerts]
     end
 ```
 
 ---
 
-## Performance & Limits
+## How to Run (Step-by-Step)
 
-The system optimizes for high recall to ensure potential failures are captured before they escalate into critical downtime.
+To run the complete end-to-end demonstration, follow these steps in order. Ensure you have a Python virtual environment activated.
 
-### Core Metrics & Operational Limits
-| Parameter | Value | Description |
-| :--- | :--- | :--- |
-| **Model Accuracy** | **0.97** | Exceptionally stable baseline for multi-class failures |
-| **Failure Recall** | **0.62** | Effectively captures majority of breakdown events |
-| **Data Capacity** | **10,000 pts** | Trained on high-fidelity manufacturing telemetry |
-| **Modbus Interface** | **6 Registers** | Mapped to Machine Type, Temps, RPM, Torque, Wear |
-| **Inference Latency**| **<50ms** | Ultra-low latency prediction via local XGBoost |
-
----
-
-## Deployment Guide
-
-### Prerequisites
-*   Python 3.9+
-*   Docker & Docker Compose
-
-### Execution Options
-Deploy the environment using the following standard procedures:
-
-**Option 1: Full-Stack Orchestration (Recommended)**
-Deploy the entire automation environment (Broker, PLC, Gateway, and API) with a single command:
+### 1. Start the MQTT Broker
+Ensure Docker is running, then start the Mosquitto broker:
 ```bash
-# Deploys with Simulation Profile
-docker compose --profile simulation up --build
+docker run -d --name mosquitto -p 1883:1883 eclipse-mosquitto
 ```
 
-**Option 2: Native Development Mode**
+### 2. Start the AI API
+This backend handles the predictive logic and health monitoring:
 ```bash
-# 1. Install dependencies
-pip install -r requirements.txt
-
-# 2. Train or Retrain the Model
-python src/train.py
-
-# 3. Start the API
 uvicorn api.main:app --reload
 ```
 
-## Configuration
+### 3. Start the PLC Emulator
+Simulates the physical machine and its sensors using Modbus TCP:
+```bash
+python industrial_iot/plc_emulator.py
+```
 
-The application is configured via environment variables. Key variables include:
-- `API_URL`: Target endpoint for the sensor simulator (Default: `http://localhost:8000`).
-- `MODBUS_HOST`: Hostname of the PLC emulator (Default: `localhost`).
-- `MQTT_HOST`: Hostname of the Mosquitto broker (Default: `localhost`).
-- `PYTHONUNBUFFERED`: Ensures logical logs are flushed in real-time.
+### 4. Start the Industrial Gateway
+The jbridge that polls the PLC and sends data to the MQTT broker:
+```bash
+python industrial_iot/gateway.py
+```
+
+### 5. Launch the Dashboard
+Open the monitoring interface in your browser:
+```bash
+# On Windows
+start dashboard.html
+```
 
 ---
 

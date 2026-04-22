@@ -81,6 +81,7 @@ _state: dict = {
     "preprocessor": None,
     "metadata": None,
     "loaded_at": None,
+    "latest_reading": None,  # Tracks the most recent sensor/prediction event
 }
 
 
@@ -117,6 +118,12 @@ def _on_mqtt_message(client, userdata, msg):
         
         # Run inference
         result = _run_inference(reading)
+        
+        # Update global state for Dashboard access (result + raw data)
+        _state["latest_reading"] = {
+            "prediction": result.model_dump(),
+            "reading": reading.model_dump()
+        }
         
         # Log to console (in a real app, this would go to a DB or Alert system)
         print(f" [MQTT] {result.device_id}: {result.risk_level} risk ({result.failure_probability*100:.1f}%)")
@@ -307,7 +314,25 @@ async def predict(reading: SensorReading):
 
     Typical IoT usage: each device POSTs on a fixed interval (e.g. every 5 s).
     """
-    return _run_inference(reading)
+    result = _run_inference(reading)
+    _state["latest_reading"] = {
+        "prediction": result.model_dump(),
+        "reading": reading.model_dump()
+    }
+    return result
+
+
+@app.get(
+    "/telemetry/latest",
+    tags=["General"],
+    summary="Get the most recent sensor telemetry processed by the system"
+)
+async def get_latest_telemetry():
+    """
+    Returns the latest telemetry reading and prediction result.
+    Used by the Dashboard for real-time monitoring.
+    """
+    return _state["latest_reading"]
 
 
 @app.post(

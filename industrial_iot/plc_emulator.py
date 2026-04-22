@@ -7,7 +7,7 @@ import asyncio
 import logging
 import random
 from pymodbus.server import StartAsyncTcpServer
-from pymodbus.device import ModbusDeviceIdentification
+from pymodbus import ModbusDeviceIdentification
 from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
 
 # Configure logging
@@ -56,27 +56,29 @@ async def update_machine_data(context):
                 int(wear)
             ]
             
+            # Set registers (Function Code 3 maps to 'hr')
             context[slave_id].setValues(3, 0x00, values)
             # log.debug(f"PLC Update: {values}")
             
         except Exception as e:
-            log.error(f"Error in simulation loop: {e}")
+            log.error(f"PLC logic error: {e}")
             
-        await asyncio.sleep(2.0) # 2-second scan cycle
+        await asyncio.sleep(1.0)
 
 async def run_server():
     # Define Data Store (Holding Registers only for this demo)
-    # We initialize 100 registers with 0
+    # Define Data Store (Holding Registers only)
     store = ModbusSlaveContext(
         hr=ModbusSequentialDataBlock(0, [0] * 100)
     )
+    # Define Server Context with Slave ID 1
     context = ModbusServerContext(slaves={0x01: store}, single=False)
     
     # Server Identification
     identity = ModbusDeviceIdentification()
-    identity.VendorName = 'Antigravity Industrial'
-    identity.ProductCode = 'AG-PLC-001'
-    identity.VendorUrl = 'http://github.com/antigravity'
+    identity.VendorName = 'Industrial Logic Systems'
+    identity.ProductCode = 'ILS-PLC-001'
+    identity.VendorUrl = 'http://industrial-systems.local'
     identity.ProductName = 'Predictive Maintenance PLC Emulator'
     identity.ModelName = 'Industrial-V1'
     identity.MajorMinorRevision = '1.0.0'

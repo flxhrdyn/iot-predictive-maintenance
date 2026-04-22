@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial AI Dashboard | Predictive Maintenance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease-in-out;
+        }
+        .glass-card:hover {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(15, 23, 42, 0.8);
+        }
+        .status-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .bg-grid {
+            background-image: radial-gradient(#1f2937 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+    </style>
+</head>
+<body class="bg-grid">
+    <div class="min-h-screen p-6 lg:p-12 max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-slate-800 border border-slate-700 rounded-lg text-indigo-400">
+                        <i data-lucide="shield-alert" class="w-6 h-6"></i>
+                    </div>
+                    <h1 class="text-2xl font-semibold tracking-tight">Industrial Machine <span class="text-indigo-400">Failure Prediction</span></h1>
+                </div>
+                <p class="text-slate-400 text-sm">Real-time Predictive Maintenance & Asset Integrity Monitoring</p>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">System Status</p>
+                    <div class="flex items-center gap-2 justify-end">
+                        <span id="conn-status-text" class="text-sm font-semibold text-green-400">CONNECTED</span>
+                        <div id="conn-status-dot" class="w-2 h-2 rounded-full bg-green-400 status-pulse"></div>
+                    </div>
+                </div>
+                <div class="h-10 w-px bg-gray-800"></div>
+                <div id="clock" class="text-2xl font-mono font-bold tracking-widest text-gray-300">00:00:00</div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Sidebar Summary -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Risk Level Card -->
+                <div class="glass-card rounded-3xl p-6 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Machine Risk Level</h2>
+                        <div id="risk-badge" class="text-4xl font-bold text-green-400 mb-2">SAFE</div>
+                        <p id="failure-prob" class="text-lg text-gray-500 font-mono">prob: 0.02%</p>
+                    </div>
+                    <div id="risk-bg" class="absolute inset-0 bg-green-500/10 transition-colors duration-500"></div>
+                </div>
+
+                <!-- Device Info -->
+                <div class="glass-card rounded-3xl p-6">
+                    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Asset Identification</h2>
+                    <div class="space-y-4">
+                        <div class="flex justify-between border-b border-gray-800 pb-2">
+                            <span class="text-gray-500">Device ID</span>
+                            <span id="device-id" class="font-mono text-blue-400">PLC-AG-001</span>
+                        </div>
+                        <div class="flex justify-between border-b border-gray-800 pb-2">
+                            <span class="text-gray-500">Machine Type</span>
+                            <span id="machine-type" class="font-bold">MEDIUM (M)</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">AI Latency</span>
+                            <span id="latency" class="text-yellow-500 font-mono text-sm">4.21 ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Last Alert -->
+                <div class="glass-card rounded-3xl p-6">
+                    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Recent Events</h2>
+                    <div id="event-log" class="space-y-3 text-sm font-mono max-h-48 overflow-y-auto pr-2">
+                        <div class="text-gray-500">[00:00:00] System initialized. Waiting for data...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Telemetry Grid -->
+            <div class="lg:col-span-3 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Temperature Card -->
+                    <div class="glass-card rounded-3xl p-8">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="p-3 bg-red-500/10 text-red-500 rounded-2xl">
+                                <i data-lucide="thermometer" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs font-mono text-gray-500">°KELVIN x10</span>
+                        </div>
+                        <h3 class="text-gray-400 font-medium mb-1">Process Temperature</h3>
+                        <div class="flex items-baseline gap-2">
+                            <span id="val-temp" class="text-5xl font-bold tracking-tighter text-white">000.0</span>
+                            <span class="text-xl text-gray-500 font-light">K</span>
+                        </div>
+                        <div class="w-full bg-gray-800 h-1.5 rounded-full mt-6">
+                            <div id="bar-temp" class="bg-red-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- RPM Card -->
+                    <div class="glass-card rounded-3xl p-8">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="p-3 bg-blue-500/10 text-blue-500 rounded-2xl">
+                                <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs font-mono text-gray-500">ROTATIONAL SPEED</span>
+                        </div>
+                        <h3 class="text-gray-400 font-medium mb-1">Engine RPM</h3>
+                        <div class="flex items-baseline gap-2">
+                            <span id="val-rpm" class="text-5xl font-bold tracking-tighter text-white">0000</span>
+                            <span class="text-xl text-gray-500 font-light">rpm</span>
+                        </div>
+                        <div class="w-full bg-gray-800 h-1.5 rounded-full mt-6">
+                            <div id="bar-rpm" class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Torque Card -->
+                    <div class="glass-card rounded-3xl p-8">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="p-3 bg-yellow-500/10 text-yellow-500 rounded-2xl">
+                                <i data-lucide="gauge" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs font-mono text-gray-500">APPLIED TORSION</span>
+                        </div>
+                        <h3 class="text-gray-400 font-medium mb-1">Applied Torque</h3>
+                        <div class="flex items-baseline gap-2">
+                            <span id="val-torque" class="text-5xl font-bold tracking-tighter text-white">00.0</span>
+                            <span class="text-xl text-gray-500 font-light">Nm</span>
+                        </div>
+                        <div class="w-full bg-gray-800 h-1.5 rounded-full mt-6">
+                            <div id="bar-torque" class="bg-yellow-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tool Wear Card -->
+                    <div class="glass-card rounded-3xl p-8">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="p-3 bg-green-500/10 text-green-500 rounded-2xl">
+                                <i data-lucide="wrench" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs font-mono text-gray-500">CUMULATIVE STRESS</span>
+                        </div>
+                        <h3 class="text-gray-400 font-medium mb-1">Tool Wear</h3>
+                        <div class="flex items-baseline gap-2">
+                            <span id="val-wear" class="text-5xl font-bold tracking-tighter text-white">00</span>
+                            <span class="text-xl text-gray-500 font-light">min</span>
+                        </div>
+                        <div class="w-full bg-gray-800 h-1.5 rounded-full mt-6">
+                            <div id="bar-wear" class="bg-green-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Chart Area -->
+                <div class="glass-card rounded-3xl p-8">
+                    <h3 class="text-gray-400 font-medium mb-6">Inference History & Probability Drift</h3>
+                    <div class="h-64">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-12 pt-8 border-t border-slate-900 text-center text-slate-500 text-xs uppercase tracking-widest leading-relaxed">
+            &copy; 2026 Industrial Machine Failure Prediction System<br>
+            Edge Computing Gateway | AI-Driven Failure Analysis | Industrial Logic
+        </footer>
+    </div>
+
+    <script>
+        // Init Lucide Icons
+        lucide.createIcons();
+
+        // Clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toTimeString().split(' ')[0];
+        }
+        setInterval(updateClock, 1000);
+
+        // Chart.js Configuration
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        const mainChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array(20).fill(''),
+                datasets: [{
+                    label: 'Failure Probability (%)',
+                    data: Array(20).fill(0),
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { display: false },
+                    y: { 
+                        beginAtZero: true, 
+                        max: 100,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#6b7280' }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Polling Logic
+        async function fetchTelemetry() {
+            try {
+                const response = await fetch('http://localhost:8000/telemetry/latest');
+                if (!response.ok) throw new Error("API Unavailable");
+                
+                const data = await response.json();
+                if (!data) return;
+
+                document.getElementById('conn-status-text').innerText = "CONNECTED";
+                document.getElementById('conn-status-dot').className = "w-2 h-2 rounded-full bg-green-400 status-pulse";
+
+                updateUI(data);
+            } catch (err) {
+                document.getElementById('conn-status-text').innerText = "DISCONNECTED";
+                document.getElementById('conn-status-dot').className = "w-2 h-2 rounded-full bg-red-400";
+                console.error("Dashboard Error:", err);
+            }
+        }
+
+        function updateUI(data) {
+            const pred = data.prediction;
+            const sensor = data.reading;
+
+            // UI Elements
+            const riskBadge = document.getElementById('risk-badge');
+            const failureProb = document.getElementById('failure-prob');
+            const riskBg = document.getElementById('risk-bg');
+
+            // Update Labels
+            riskBadge.innerText = pred.risk_level;
+            failureProb.innerText = `prob: ${(pred.failure_probability * 100).toFixed(2)}%`;
+            document.getElementById('device-id').innerText = pred.device_id || 'PLC-AG-001';
+            document.getElementById('machine-type').innerText = sensor.type;
+            document.getElementById('latency').innerText = `${pred.inference_time_ms} ms`;
+
+            // Risk Coloring
+            if (pred.risk_level === 'HIGH') {
+                riskBadge.className = "text-4xl font-bold text-red-500 mb-2";
+                riskBg.className = "absolute inset-0 bg-red-500/20";
+                addLog(`[WARNING] High risk detected on ${pred.device_id}!`, 'text-red-500');
+            } else if (pred.risk_level === 'MEDIUM') {
+                riskBadge.className = "text-4xl font-bold text-yellow-500 mb-2";
+                riskBg.className = "absolute inset-0 bg-yellow-500/10";
+            } else {
+                riskBadge.className = "text-4xl font-bold text-green-400 mb-2";
+                riskBg.className = "absolute inset-0 bg-green-500/10";
+            }
+
+            // Update Telemetry Values
+            document.getElementById('val-temp').innerText = sensor.process_temperature_K.toFixed(1);
+            document.getElementById('val-rpm').innerText = sensor.rotational_speed_rpm.toFixed(0);
+            document.getElementById('val-torque').innerText = sensor.torque_Nm.toFixed(1);
+            document.getElementById('val-wear').innerText = sensor.tool_wear_min.toFixed(0);
+
+            // Progress Bars (%)
+            document.getElementById('bar-temp').style.width = Math.min(((sensor.process_temperature_K - 290) / 30) * 100, 100) + '%';
+            document.getElementById('bar-rpm').style.width = Math.min((sensor.rotational_speed_rpm / 3000) * 100, 100) + '%';
+            document.getElementById('bar-torque').style.width = Math.min((sensor.torque_Nm / 80) * 100, 100) + '%';
+            document.getElementById('bar-wear').style.width = Math.min((sensor.tool_wear_min / 250) * 100, 100) + '%';
+
+            // Update Chart
+            mainChart.data.datasets[0].data.push(pred.failure_probability * 100);
+            mainChart.data.datasets[0].data.shift();
+            
+            // Adjust Line Color based on Probability
+            const color = pred.failure_probability > 0.5 ? '#f43f5e' : '#3b82f6';
+            mainChart.data.datasets[0].borderColor = color;
+            mainChart.update();
+        }
+
+        function addLog(msg, colorClass = 'text-gray-500') {
+            const log = document.getElementById('event-log');
+            const time = new Date().toTimeString().split(' ')[0];
+            const div = document.createElement('div');
+            div.className = colorClass;
+            div.innerText = `[${time}] ${msg}`;
+            log.prepend(div);
+            if (log.children.length > 10) log.lastElementChild.remove();
+        }
+
+        // Start polling every 1.5 seconds
+        setInterval(fetchTelemetry, 1500);
+    </script>
+</body>
+</html>
