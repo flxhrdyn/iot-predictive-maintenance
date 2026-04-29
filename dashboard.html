@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,29 +15,42 @@
             background-color: #020617;
             color: #f8fafc;
         }
+
         .glass-card {
             background: rgba(15, 23, 42, 0.6);
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.2s ease-in-out;
         }
+
         .glass-card:hover {
             border: 1px solid rgba(255, 255, 255, 0.12);
             background: rgba(15, 23, 42, 0.8);
         }
+
         .status-pulse {
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
+
         .bg-grid {
             background-image: radial-gradient(#1f2937 1px, transparent 1px);
             background-size: 30px 30px;
         }
     </style>
 </head>
+
 <body class="bg-grid">
     <div class="min-h-screen p-6 lg:p-12 max-w-7xl mx-auto">
         <!-- Header -->
@@ -46,11 +60,12 @@
                     <div class="p-2 bg-slate-800 border border-slate-700 rounded-lg text-indigo-400">
                         <i data-lucide="shield-alert" class="w-6 h-6"></i>
                     </div>
-                    <h1 class="text-2xl font-semibold tracking-tight">Industrial Machine <span class="text-indigo-400">Failure Prediction</span></h1>
+                    <h1 class="text-2xl font-semibold tracking-tight">Industrial Machine <span
+                            class="text-indigo-400">Failure Prediction</span></h1>
                 </div>
                 <p class="text-slate-400 text-sm">Real-time Predictive Maintenance & Asset Integrity Monitoring</p>
             </div>
-            
+
             <div class="flex items-center gap-4">
                 <div class="text-right">
                     <p class="text-sm text-gray-500">System Status</p>
@@ -70,7 +85,8 @@
                 <!-- Risk Level Card -->
                 <div class="glass-card rounded-3xl p-6 relative overflow-hidden">
                     <div class="relative z-10">
-                        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Machine Risk Level</h2>
+                        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Machine Risk Level
+                        </h2>
                         <div id="risk-badge" class="text-4xl font-bold text-green-400 mb-2">SAFE</div>
                         <p id="failure-prob" class="text-lg text-gray-500 font-mono">prob: 0.02%</p>
                     </div>
@@ -79,15 +95,20 @@
 
                 <!-- Device Info -->
                 <div class="glass-card rounded-3xl p-6">
-                    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Asset Identification</h2>
+                    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Asset Identification
+                    </h2>
                     <div class="space-y-4">
                         <div class="flex justify-between border-b border-gray-800 pb-2">
                             <span class="text-gray-500">Device ID</span>
                             <span id="device-id" class="font-mono text-blue-400">PLC-AG-001</span>
                         </div>
                         <div class="flex justify-between border-b border-gray-800 pb-2">
-                            <span class="text-gray-500">Machine Type</span>
-                            <span id="machine-type" class="font-bold">MEDIUM (M)</span>
+                             <span class="text-gray-500">Asset Type</span>
+                             <span class="font-bold text-indigo-400">CNC Milling machine</span>
+                        </div>
+                        <div class="flex justify-between border-b border-gray-800 pb-2">
+                            <span class="text-gray-500">Machine Class</span>
+                            <span id="machine-type" class="font-bold text-white">MEDIUM (M)</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-500">AI Latency</span>
@@ -122,7 +143,8 @@
                             <span class="text-xl text-gray-500 font-light">K</span>
                         </div>
                         <div class="w-full bg-gray-800 h-1.5 rounded-full mt-6">
-                            <div id="bar-temp" class="bg-red-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            <div id="bar-temp" class="bg-red-500 h-full rounded-full transition-all duration-500"
+                                style="width: 0%"></div>
                         </div>
                     </div>
 
@@ -140,7 +162,8 @@
                             <span class="text-xl text-gray-500 font-light">rpm</span>
                         </div>
                         <div class="w-full bg-gray-800 h-1.5 rounded-full mt-6">
-                            <div id="bar-rpm" class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            <div id="bar-rpm" class="bg-blue-500 h-full rounded-full transition-all duration-500"
+                                style="width: 0%"></div>
                         </div>
                     </div>
 
@@ -158,7 +181,8 @@
                             <span class="text-xl text-gray-500 font-light">Nm</span>
                         </div>
                         <div class="w-full bg-gray-800 h-1.5 rounded-full mt-6">
-                            <div id="bar-torque" class="bg-yellow-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            <div id="bar-torque" class="bg-yellow-500 h-full rounded-full transition-all duration-500"
+                                style="width: 0%"></div>
                         </div>
                     </div>
 
@@ -176,7 +200,8 @@
                             <span class="text-xl text-gray-500 font-light">min</span>
                         </div>
                         <div class="w-full bg-gray-800 h-1.5 rounded-full mt-6">
-                            <div id="bar-wear" class="bg-green-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            <div id="bar-wear" class="bg-green-500 h-full rounded-full transition-all duration-500"
+                                style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -191,7 +216,8 @@
             </div>
         </div>
 
-        <footer class="mt-12 pt-8 border-t border-slate-900 text-center text-slate-500 text-xs uppercase tracking-widest leading-relaxed">
+        <footer
+            class="mt-12 pt-8 border-t border-slate-900 text-center text-slate-500 text-xs uppercase tracking-widest leading-relaxed">
             &copy; 2026 Industrial Machine Failure Prediction System<br>
             Edge Computing Gateway | AI-Driven Failure Analysis | Industrial Logic
         </footer>
@@ -230,8 +256,8 @@
                 maintainAspectRatio: false,
                 scales: {
                     x: { display: false },
-                    y: { 
-                        beginAtZero: true, 
+                    y: {
+                        beginAtZero: true,
                         max: 100,
                         grid: { color: 'rgba(255, 255, 255, 0.05)' },
                         ticks: { color: '#6b7280' }
@@ -246,7 +272,7 @@
             try {
                 const response = await fetch('http://localhost:8000/telemetry/latest');
                 if (!response.ok) throw new Error("API Unavailable");
-                
+
                 const data = await response.json();
                 if (!data) return;
 
@@ -305,7 +331,7 @@
             // Update Chart
             mainChart.data.datasets[0].data.push(pred.failure_probability * 100);
             mainChart.data.datasets[0].data.shift();
-            
+
             // Adjust Line Color based on Probability
             const color = pred.failure_probability > 0.5 ? '#f43f5e' : '#3b82f6';
             mainChart.data.datasets[0].borderColor = color;
@@ -326,4 +352,5 @@
         setInterval(fetchTelemetry, 1500);
     </script>
 </body>
+
 </html>

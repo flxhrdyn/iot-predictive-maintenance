@@ -7,7 +7,7 @@ import asyncio
 import logging
 import random
 from pymodbus.server import StartAsyncTcpServer
-from pymodbus import ModbusDeviceIdentification
+from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
 
 # Configure logging
