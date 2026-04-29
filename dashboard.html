@@ -4,250 +4,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Industrial AI Dashboard | Predictive Maintenance</title>
+    <title>Predictive Maintenance | Industrial AI Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #020617;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .sidebar-brand {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        }
+
+        .nav-item {
+            color: #94a3b8;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.08);
             color: #f8fafc;
         }
 
-        .glass-card {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.2s ease-in-out;
+        .data-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .glass-card:hover {
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            background: rgba(15, 23, 42, 0.8);
+        .data-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
-        .status-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        #event-log::-webkit-scrollbar {
+            width: 4px;
+        }
+        #event-log::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
         }
 
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        .bg-grid {
-            background-image: radial-gradient(#1f2937 1px, transparent 1px);
-            background-size: 30px 30px;
-        }
+        .status-safe { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+        .status-warning { background: #fffbeb; border-color: #fef3c7; color: #b45309; }
+        .status-danger { background: #fef2f2; border-color: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 
-<body class="bg-grid">
-    <div class="min-h-screen p-6 lg:p-12 max-w-7xl mx-auto">
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
-            <div>
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="p-2 bg-slate-800 border border-slate-700 rounded-lg text-indigo-400">
-                        <i data-lucide="shield-alert" class="w-6 h-6"></i>
-                    </div>
-                    <h1 class="text-2xl font-semibold tracking-tight">Industrial Machine <span
-                            class="text-indigo-400">Failure Prediction</span></h1>
+<body class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="sidebar-brand w-64 flex-shrink-0 flex flex-col text-white hidden md:flex border-r border-indigo-900/50">
+        <div class="p-6 border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-500 p-2 rounded-lg">
+                    <i data-lucide="cpu" class="w-5 h-5 text-white"></i>
                 </div>
-                <p class="text-slate-400 text-sm">Real-time Predictive Maintenance & Asset Integrity Monitoring</p>
-            </div>
-
-            <div class="flex items-center gap-4">
-                <div class="text-right">
-                    <p class="text-sm text-gray-500">System Status</p>
-                    <div class="flex items-center gap-2 justify-end">
-                        <span id="conn-status-text" class="text-sm font-semibold text-green-400">CONNECTED</span>
-                        <div id="conn-status-dot" class="w-2 h-2 rounded-full bg-green-400 status-pulse"></div>
-                    </div>
-                </div>
-                <div class="h-10 w-px bg-gray-800"></div>
-                <div id="clock" class="text-2xl font-mono font-bold tracking-widest text-gray-300">00:00:00</div>
-            </div>
-        </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Sidebar Summary -->
-            <div class="lg:col-span-1 space-y-6">
-                <!-- Risk Level Card -->
-                <div class="glass-card rounded-3xl p-6 relative overflow-hidden">
-                    <div class="relative z-10">
-                        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Machine Risk Level
-                        </h2>
-                        <div id="risk-badge" class="text-4xl font-bold text-green-400 mb-2">SAFE</div>
-                        <p id="failure-prob" class="text-lg text-gray-500 font-mono">prob: 0.02%</p>
-                    </div>
-                    <div id="risk-bg" class="absolute inset-0 bg-green-500/10 transition-colors duration-500"></div>
-                </div>
-
-                <!-- Device Info -->
-                <div class="glass-card rounded-3xl p-6">
-                    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Asset Identification
-                    </h2>
-                    <div class="space-y-4">
-                        <div class="flex justify-between border-b border-gray-800 pb-2">
-                            <span class="text-gray-500">Device ID</span>
-                            <span id="device-id" class="font-mono text-blue-400">PLC-AG-001</span>
-                        </div>
-                        <div class="flex justify-between border-b border-gray-800 pb-2">
-                             <span class="text-gray-500">Asset Type</span>
-                             <span class="font-bold text-indigo-400">CNC Milling machine</span>
-                        </div>
-                        <div class="flex justify-between border-b border-gray-800 pb-2">
-                            <span class="text-gray-500">Machine Class</span>
-                            <span id="machine-type" class="font-bold text-white">MEDIUM (M)</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">AI Latency</span>
-                            <span id="latency" class="text-yellow-500 font-mono text-sm">4.21 ms</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Last Alert -->
-                <div class="glass-card rounded-3xl p-6">
-                    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Recent Events</h2>
-                    <div id="event-log" class="space-y-3 text-sm font-mono max-h-48 overflow-y-auto pr-2">
-                        <div class="text-gray-500">[00:00:00] System initialized. Waiting for data...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Main Telemetry Grid -->
-            <div class="lg:col-span-3 space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Temperature Card -->
-                    <div class="glass-card rounded-3xl p-8">
-                        <div class="flex justify-between items-center mb-6">
-                            <div class="p-3 bg-red-500/10 text-red-500 rounded-2xl">
-                                <i data-lucide="thermometer" class="w-6 h-6"></i>
-                            </div>
-                            <span class="text-xs font-mono text-gray-500">°KELVIN x10</span>
-                        </div>
-                        <h3 class="text-gray-400 font-medium mb-1">Process Temperature</h3>
-                        <div class="flex items-baseline gap-2">
-                            <span id="val-temp" class="text-5xl font-bold tracking-tighter text-white">000.0</span>
-                            <span class="text-xl text-gray-500 font-light">K</span>
-                        </div>
-                        <div class="w-full bg-gray-800 h-1.5 rounded-full mt-6">
-                            <div id="bar-temp" class="bg-red-500 h-full rounded-full transition-all duration-500"
-                                style="width: 0%"></div>
-                        </div>
-                    </div>
-
-                    <!-- RPM Card -->
-                    <div class="glass-card rounded-3xl p-8">
-                        <div class="flex justify-between items-center mb-6">
-                            <div class="p-3 bg-blue-500/10 text-blue-500 rounded-2xl">
-                                <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
-                            </div>
-                            <span class="text-xs font-mono text-gray-500">ROTATIONAL SPEED</span>
-                        </div>
-                        <h3 class="text-gray-400 font-medium mb-1">Engine RPM</h3>
-                        <div class="flex items-baseline gap-2">
-                            <span id="val-rpm" class="text-5xl font-bold tracking-tighter text-white">0000</span>
-                            <span class="text-xl text-gray-500 font-light">rpm</span>
-                        </div>
-                        <div class="w-full bg-gray-800 h-1.5 rounded-full mt-6">
-                            <div id="bar-rpm" class="bg-blue-500 h-full rounded-full transition-all duration-500"
-                                style="width: 0%"></div>
-                        </div>
-                    </div>
-
-                    <!-- Torque Card -->
-                    <div class="glass-card rounded-3xl p-8">
-                        <div class="flex justify-between items-center mb-6">
-                            <div class="p-3 bg-yellow-500/10 text-yellow-500 rounded-2xl">
-                                <i data-lucide="gauge" class="w-6 h-6"></i>
-                            </div>
-                            <span class="text-xs font-mono text-gray-500">APPLIED TORSION</span>
-                        </div>
-                        <h3 class="text-gray-400 font-medium mb-1">Applied Torque</h3>
-                        <div class="flex items-baseline gap-2">
-                            <span id="val-torque" class="text-5xl font-bold tracking-tighter text-white">00.0</span>
-                            <span class="text-xl text-gray-500 font-light">Nm</span>
-                        </div>
-                        <div class="w-full bg-gray-800 h-1.5 rounded-full mt-6">
-                            <div id="bar-torque" class="bg-yellow-500 h-full rounded-full transition-all duration-500"
-                                style="width: 0%"></div>
-                        </div>
-                    </div>
-
-                    <!-- Tool Wear Card -->
-                    <div class="glass-card rounded-3xl p-8">
-                        <div class="flex justify-between items-center mb-6">
-                            <div class="p-3 bg-green-500/10 text-green-500 rounded-2xl">
-                                <i data-lucide="wrench" class="w-6 h-6"></i>
-                            </div>
-                            <span class="text-xs font-mono text-gray-500">CUMULATIVE STRESS</span>
-                        </div>
-                        <h3 class="text-gray-400 font-medium mb-1">Tool Wear</h3>
-                        <div class="flex items-baseline gap-2">
-                            <span id="val-wear" class="text-5xl font-bold tracking-tighter text-white">00</span>
-                            <span class="text-xl text-gray-500 font-light">min</span>
-                        </div>
-                        <div class="w-full bg-gray-800 h-1.5 rounded-full mt-6">
-                            <div id="bar-wear" class="bg-green-500 h-full rounded-full transition-all duration-500"
-                                style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Analytics Chart Area -->
-                <div class="glass-card rounded-3xl p-8">
-                    <h3 class="text-gray-400 font-medium mb-6">Inference History & Probability Drift</h3>
-                    <div class="h-64">
-                        <canvas id="mainChart"></canvas>
-                    </div>
+                <div>
+                    <h2 class="text-sm font-black tracking-tight leading-none">PREDICTIVE</h2>
+                    <p class="text-[10px] font-bold text-indigo-300 tracking-widest mt-1">MAINTENANCE</p>
                 </div>
             </div>
         </div>
 
-        <footer
-            class="mt-12 pt-8 border-t border-slate-900 text-center text-slate-500 text-xs uppercase tracking-widest leading-relaxed">
-            &copy; 2026 Industrial Machine Failure Prediction System<br>
-            Edge Computing Gateway | AI-Driven Failure Analysis | Industrial Logic
-        </footer>
-    </div>
+        <nav class="flex-1 p-4 space-y-1">
+            <a href="#" class="nav-item active flex items-center gap-3 px-3 py-2 rounded-lg">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                <span class="font-semibold text-xs uppercase tracking-wider">Dashboard</span>
+            </a>
+            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg">
+                <i data-lucide="activity" class="w-4 h-4"></i>
+                <span class="font-semibold text-xs uppercase tracking-wider">Telemetry</span>
+            </a>
+            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg">
+                <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+                <span class="font-semibold text-xs uppercase tracking-wider">Analytics</span>
+            </a>
+            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+                <span class="font-semibold text-xs uppercase tracking-wider">Gateway</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-white/5">
+            <div class="bg-indigo-950/50 rounded-xl p-3 border border-white/5">
+                <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-2">System Status</p>
+                <div id="conn-status" class="flex items-center gap-2 text-[10px] font-bold text-emerald-400">
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                    ONLINE
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center flex-shrink-0 shadow-sm">
+            <div>
+                <h1 class="text-lg font-black text-slate-800 tracking-tight uppercase">Predictive Maintenance Dashboard</h1>
+                <p class="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase">Industrial AI Analytics Gateway</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                    <div id="date" class="text-[10px] font-bold text-slate-500 uppercase">Loading...</div>
+                    <div class="h-3 w-px bg-slate-200"></div>
+                    <div id="clock" class="text-sm font-mono font-black text-slate-700 tracking-widest">00:00:00</div>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <!-- Top Summary Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Condition Risk (Dense) -->
+                <div id="risk-container" class="data-card rounded-xl p-6 lg:col-span-4 flex flex-col justify-center status-safe border-2">
+                    <h2 class="text-[10px] font-black uppercase tracking-widest mb-2 opacity-70">Machine Condition</h2>
+                    <div id="risk-badge" class="text-5xl font-black mb-1 tracking-tighter">SAFE</div>
+                    <p id="failure-prob" class="text-sm font-mono font-black opacity-60">PROBABILITY: 0.02%</p>
+                </div>
+
+                <!-- Asset Identification (Dense) -->
+                <div class="data-card rounded-xl p-6 lg:col-span-8">
+                    <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Asset Identification</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Device Node</p>
+                            <p id="device-id" class="text-sm font-black text-indigo-600 font-mono">PLC-AG-001</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Asset Type</p>
+                            <p class="text-sm font-black text-slate-700">CNC Milling</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Machine Class</p>
+                            <p id="machine-type" class="text-sm font-black text-slate-700 uppercase">Medium (M)</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">AI Latency</p>
+                            <p id="latency" class="text-sm font-black text-amber-600 font-mono">4.21 ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Telemetry Metrics Grid (Tighter) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Temp -->
+                <div class="data-card rounded-xl p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Process Temp</span>
+                        <i data-lucide="thermometer" class="w-4 h-4 text-rose-500"></i>
+                    </div>
+                    <div class="flex items-baseline gap-1 mb-4">
+                        <span id="val-temp" class="text-2xl font-black text-slate-800 tracking-tight">000.0</span>
+                        <span class="text-xs font-bold text-slate-400">K</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-temp" class="bg-rose-500 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- RPM -->
+                <div class="data-card rounded-xl p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Engine RPM</span>
+                        <i data-lucide="rotate-ccw" class="w-4 h-4 text-blue-500"></i>
+                    </div>
+                    <div class="flex items-baseline gap-1 mb-4">
+                        <span id="val-rpm" class="text-2xl font-black text-slate-800 tracking-tight">0000</span>
+                        <span class="text-xs font-bold text-slate-400">RPM</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-rpm" class="bg-blue-600 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Torque -->
+                <div class="data-card rounded-xl p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Applied Torque</span>
+                        <i data-lucide="gauge" class="w-4 h-4 text-amber-500"></i>
+                    </div>
+                    <div class="flex items-baseline gap-1 mb-4">
+                        <span id="val-torque" class="text-2xl font-black text-slate-800 tracking-tight">00.0</span>
+                        <span class="text-xs font-bold text-slate-400">NM</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-torque" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Wear -->
+                <div class="data-card rounded-xl p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Tool Wear</span>
+                        <i data-lucide="wrench" class="w-4 h-4 text-emerald-500"></i>
+                    </div>
+                    <div class="flex items-baseline gap-1 mb-4">
+                        <span id="val-wear" class="text-2xl font-black text-slate-800 tracking-tight">00</span>
+                        <span class="text-xs font-bold text-slate-400">MIN</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div id="bar-wear" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics & Logs Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-10">
+                <!-- Trend Visualization -->
+                <div class="data-card rounded-xl p-6 lg:col-span-2">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Failure Probability Trend</h3>
+                        <div class="text-[9px] font-bold text-slate-400 uppercase bg-slate-50 px-2 py-0.5 rounded border border-slate-200">Real-time AI Analysis</div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Live Event Log (Denser) -->
+                <div class="data-card rounded-xl flex flex-col overflow-hidden">
+                    <div class="px-5 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                        <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest">System Events</h3>
+                        <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping"></div>
+                    </div>
+                    <div id="event-log" class="flex-1 p-5 space-y-3 overflow-y-auto max-h-[300px] text-[10px] font-bold">
+                        <div class="text-slate-400 border-l-2 border-slate-200 pl-3 py-1 opacity-60">Initializing monitoring services...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
     <script>
-        // Init Lucide Icons
         lucide.createIcons();
 
-        // Clock
+        // Clock & Date
         function updateClock() {
             const now = new Date();
             document.getElementById('clock').innerText = now.toTimeString().split(' ')[0];
+            const options = { month: 'short', day: '2-digit', year: 'numeric' };
+            document.getElementById('date').innerText = now.toLocaleDateString('en-US', options);
         }
         setInterval(updateClock, 1000);
+        updateClock();
 
         // Chart.js Configuration
         const ctx = document.getElementById('mainChart').getContext('2d');
         const mainChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: Array(20).fill(''),
+                labels: Array(30).fill(''),
                 datasets: [{
-                    label: 'Failure Probability (%)',
-                    data: Array(20).fill(0),
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    label: 'Prob %',
+                    data: Array(30).fill(0),
+                    borderColor: '#4338ca',
+                    backgroundColor: 'rgba(67, 56, 202, 0.05)',
                     borderWidth: 2,
-                    tension: 0.4,
                     fill: true,
+                    tension: 0.4,
                     pointRadius: 0
                 }]
             },
@@ -256,101 +280,82 @@
                 maintainAspectRatio: false,
                 scales: {
                     x: { display: false },
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#6b7280' }
+                    y: { 
+                        beginAtZero: true, 
+                        max: 100, 
+                        grid: { color: '#f1f5f9' }, 
+                        ticks: { color: '#94a3b8', font: { weight: '700', size: 9 } } 
                     }
                 },
                 plugins: { legend: { display: false } }
             }
         });
 
-        // Polling Logic
         async function fetchTelemetry() {
             try {
                 const response = await fetch('http://localhost:8000/telemetry/latest');
-                if (!response.ok) throw new Error("API Unavailable");
-
+                if (!response.ok) throw new Error("Offline");
                 const data = await response.json();
-                if (!data) return;
-
-                document.getElementById('conn-status-text').innerText = "CONNECTED";
-                document.getElementById('conn-status-dot').className = "w-2 h-2 rounded-full bg-green-400 status-pulse";
-
                 updateUI(data);
+                document.getElementById('conn-status').className = "flex items-center gap-2 text-[10px] font-bold text-emerald-400";
+                document.getElementById('conn-status').innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div> ONLINE';
             } catch (err) {
-                document.getElementById('conn-status-text').innerText = "DISCONNECTED";
-                document.getElementById('conn-status-dot').className = "w-2 h-2 rounded-full bg-red-400";
-                console.error("Dashboard Error:", err);
+                document.getElementById('conn-status').className = "flex items-center gap-2 text-[10px] font-bold text-rose-500";
+                document.getElementById('conn-status').innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-rose-500"></div> OFFLINE';
             }
         }
 
         function updateUI(data) {
-            const pred = data.prediction;
             const sensor = data.reading;
+            const pred = data.prediction;
 
-            // UI Elements
-            const riskBadge = document.getElementById('risk-badge');
-            const failureProb = document.getElementById('failure-prob');
-            const riskBg = document.getElementById('risk-bg');
-
-            // Update Labels
-            riskBadge.innerText = pred.risk_level;
-            failureProb.innerText = `prob: ${(pred.failure_probability * 100).toFixed(2)}%`;
+            // Identification
             document.getElementById('device-id').innerText = pred.device_id || 'PLC-AG-001';
             document.getElementById('machine-type').innerText = sensor.type;
             document.getElementById('latency').innerText = `${pred.inference_time_ms} ms`;
 
-            // Risk Coloring
+            // Risk State
+            const riskBadge = document.getElementById('risk-badge');
+            const riskContainer = document.getElementById('risk-container');
+            riskBadge.innerText = pred.risk_level;
+            document.getElementById('failure-prob').innerText = `PROBABILITY: ${(pred.failure_probability * 100).toFixed(2)}%`;
+
             if (pred.risk_level === 'HIGH') {
-                riskBadge.className = "text-4xl font-bold text-red-500 mb-2";
-                riskBg.className = "absolute inset-0 bg-red-500/20";
-                addLog(`[WARNING] High risk detected on ${pred.device_id}!`, 'text-red-500');
+                riskContainer.className = "data-card rounded-xl p-6 lg:col-span-4 flex flex-col justify-center status-danger border-2";
+                addLog(`CRITICAL: High failure risk on ${pred.device_id}`, 'text-rose-600 border-rose-300');
             } else if (pred.risk_level === 'MEDIUM') {
-                riskBadge.className = "text-4xl font-bold text-yellow-500 mb-2";
-                riskBg.className = "absolute inset-0 bg-yellow-500/10";
+                riskContainer.className = "data-card rounded-xl p-6 lg:col-span-4 flex flex-col justify-center status-warning border-2";
             } else {
-                riskBadge.className = "text-4xl font-bold text-green-400 mb-2";
-                riskBg.className = "absolute inset-0 bg-green-500/10";
+                riskContainer.className = "data-card rounded-xl p-6 lg:col-span-4 flex flex-col justify-center status-safe border-2";
             }
 
-            // Update Telemetry Values
+            // Metrics
             document.getElementById('val-temp').innerText = sensor.process_temperature_K.toFixed(1);
             document.getElementById('val-rpm').innerText = sensor.rotational_speed_rpm.toFixed(0);
             document.getElementById('val-torque').innerText = sensor.torque_Nm.toFixed(1);
             document.getElementById('val-wear').innerText = sensor.tool_wear_min.toFixed(0);
 
-            // Progress Bars (%)
             document.getElementById('bar-temp').style.width = Math.min(((sensor.process_temperature_K - 290) / 30) * 100, 100) + '%';
             document.getElementById('bar-rpm').style.width = Math.min((sensor.rotational_speed_rpm / 3000) * 100, 100) + '%';
             document.getElementById('bar-torque').style.width = Math.min((sensor.torque_Nm / 80) * 100, 100) + '%';
             document.getElementById('bar-wear').style.width = Math.min((sensor.tool_wear_min / 250) * 100, 100) + '%';
 
-            // Update Chart
+            // Chart
             mainChart.data.datasets[0].data.push(pred.failure_probability * 100);
             mainChart.data.datasets[0].data.shift();
-
-            // Adjust Line Color based on Probability
-            const color = pred.failure_probability > 0.5 ? '#f43f5e' : '#3b82f6';
-            mainChart.data.datasets[0].borderColor = color;
-            mainChart.update();
+            mainChart.update('none');
         }
 
-        function addLog(msg, colorClass = 'text-gray-500') {
+        function addLog(msg, classes) {
             const log = document.getElementById('event-log');
-            const time = new Date().toTimeString().split(' ')[0];
             const div = document.createElement('div');
-            div.className = colorClass;
-            div.innerText = `[${time}] ${msg}`;
+            div.className = `pl-3 py-1 border-l-2 ${classes}`;
+            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
             log.prepend(div);
-            if (log.children.length > 10) log.lastElementChild.remove();
+            if (log.children.length > 15) log.lastElementChild.remove();
         }
 
-        // Start polling every 1.5 seconds
         setInterval(fetchTelemetry, 1500);
     </script>
 </body>
-
 </html>
