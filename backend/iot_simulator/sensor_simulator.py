@@ -108,8 +108,9 @@ class DeviceSimulator:
         # Torque increases slightly as cutting resistance grows
         torque = random.uniform(*p["torque_base"]) + wear_ratio * 8.0 + random.gauss(0, 1.5)
 
-        # Advance wear
-        self.tool_wear = min(253, self.tool_wear + p["wear_rate"] + random.randint(-1, 1))
+        # Advance wear (reset to 0 if exceeds threshold to simulate tool change)
+        new_wear = self.tool_wear + p["wear_rate"] + random.randint(-1, 1)
+        self.tool_wear = new_wear if new_wear <= 250 else 0
 
         return {
             "type": self.machine_type,

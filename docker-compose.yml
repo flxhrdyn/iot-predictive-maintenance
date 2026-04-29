@@ -1,74 +1,73 @@
 version: "3.9"
 
 services:
-
-  # Prediction API #
+  # Prediction API (Backend)
   api:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: machine-failure-api
     ports:
       - "8000:8000"
     volumes:
-      # Mount the local models/ folder so trained artefacts are visible
-      - ./models:/app/models:ro
+      - ./backend/models:/app/models:ro
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:
-      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" ]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
     restart: unless-stopped
 
-  # IoT Sensor Simulator (optional, starts after API is healthy) #
+  # Frontend (React App)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: machine-failure-ui
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # IoT Sensor Simulator
   iot-simulator:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: machine-failure-iot-sim
     depends_on:
       api:
         condition: service_healthy
-    environment:
-      - API_URL=http://api:8000
-    # Override CMD to run the simulator instead of the API
-    command: >
-      python iot_simulator/sensor_simulator.py --api-url http://api:8000 --multi --interval 3
-    volumes:
-      - ./iot_simulator:/app/iot_simulator:ro
-    restart: "no" # run once; remove this line for continuous simulation
-    profiles:
-      - simulation
+    command: python iot_simulator/sensor_simulator.py --api-url http://api:8000
+    restart: unless-stopped
 
-  # MQTT Broker #
+  # MQTT Broker
   mosquitto:
     image: eclipse-mosquitto:2.0
     container_name: iot-mqtt-broker
     ports:
       - "1883:1883"
-      - "9001:9001"
     volumes:
-      # Simple config allowing anonymous access for demo purposes
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
-    profiles:
-      - simulation
 
-  # PLC Emulator (Modbus TCP Server) #
+  # PLC Emulator (Modbus TCP Server)
   plc-emulator:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: industrial-plc
     command: python industrial_iot/plc_emulator.py
     environment:
       - PYTHONUNBUFFERED=1
-    profiles:
-      - simulation
 
-  # IoT Gateway (Modbus Client -> MQTT Publisher) #
+  # IoT Gateway (Modbus to MQTT)
   iot-gateway:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: industrial-gateway
     depends_on:
       - plc-emulator
@@ -78,5 +77,3 @@ services:
       - MODBUS_HOST=plc-emulator
       - MQTT_HOST=mosquitto
       - PYTHONUNBUFFERED=1
-    profiles:
-      - simulation
