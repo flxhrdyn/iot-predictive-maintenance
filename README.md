@@ -23,6 +23,16 @@ This project features a **Modular IIoT Microservice Architecture**:
 - **Frontend**: Real-time Asset Performance Dashboard built with React & TypeScript.
 - **ML Engine**: Production-ready XGBoost diagnostics.
 
+## Demo Video
+
+<div align="center">
+  <kbd>
+    <video src="https://github.com/user-attachments/assets/e4bcacb3-9ae4-42d9-826f-849173e5d596" width="100%" controls autoplay loop muted playsinline style="border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+    </video>
+  </kbd>
+  <p><i>Interactive Demo: Real-time failure risk inference.</i></p>
+</div>
+
 ## Technical Features
 
 - **Predictive Inference Engine**: XGBoost classifier trained to detect manufacturing failures (Tool Wear, Heat Dissipation, Power, etc.) with high precision.
